@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tetris</title>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        line-height: 0;
+        text-align: center;
+        margin: 1em;
+      }
+      
+      .pixel {
+        display: inline-block;
+        width: 4vmin;
+        height: 4vmin;
+        margin: 0;
+      }
+      
+      br {
+        display: block;
+        margin: 0 0;
+      }
+      
+      aside {
+        float: left;
+        padding: 1em;
+      }
+      
+      div {
+        display: inline-block;
+      }
+      
+      div#gameboard {
+        text-align: center;
+      }
+    </style>
+    <script>
+    var score;
+    var speed;
+    
+    var timeout;
+    var locktimeout;
+    var keypresstimeout;
+    var positiontimeout;
+    var softdroptimeout;
+    var keypress = {};
+    
+    var gameboard;
+    var scoreboard;
+    
+    var gameboard;
+    var template = [
+      ["|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "|"],
+      ["|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"]
+    ];
+    
+    var activex;
+    var activey;
+    var activetype;
+    var activerotate;
+    
+    var blockI = [
+      [
+        [0, 0, 0, 0],
+        ["+", "+", "+", "+"],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, 0, "+", 0],
+        [0, 0, "+", 0],
+        [0, 0, "+", 0],
+        [0, 0, "+", 0]
+      ],
+      [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        ["+", "+", "+", "+"],
+        [0, 0, 0, 0]
+      ],
+      [
+        [0, "+", 0, 0],
+        [0, "+", 0, 0],
+        [0, "+", 0, 0],
+        [0, "+", 0, 0]
+      ]
+    ];
+    
+    var blockO = [
+      [
+        ["+", "+"],
+        ["+", "+"]
+      ]
+    ];
+    
+    var blockT = [
+      [
+        [0, "+", 0],
+        ["+", "+", "+"],
+        [0, 0, 0]
+      ],
+      [
+        [0, "+", 0],
+        [0, "+", "+"],
+        [0, "+", 0]
+      ],
+      [
+        [0, 0, 0],
+        ["+", "+", "+"],
+        [0, "+", 0]
+      ],
+      [
+        [0, "+", 0],
+        ["+", "+", 0],
+        [0, "+", 0]
+      ]
+    ];
+    
+    var blockS = [
+      [
+        [0, 0, 0],
+        [0, "+", "+"],
+        ["+", "+", 0]
+      ],
+      [
+        [0, "+", 0],
+        [0, "+", "+"],
+        [0, 0, "+"]
+      ]
+    ];
+    
+    var blockZ = [
+      [
+        [0, 0, 0],
+        ["+", "+", 0],
+        [0, "+", "+"]
+      ],
+      [
+        [0, 0, "+"],
+        [0, "+", "+"],
+        [0, "+", 0]
+      ]
+    ];
+    
+    var blockJ = [
+      [
+        ["+", 0, 0],
+        ["+", "+", "+"],
+        [0, 0, 0]
+      ],
+      [
+        [0, "+", "+"],
+        [0, "+", 0],
+        [0, "+", 0]
+      ],
+      [
+        [0, 0, 0],
+        ["+", "+", "+"],
+        [0, 0, "+"]
+      ],
+      [
+        [0, "+", 0],
+        [0, "+", 0],
+        ["+", "+", 0]
+
+      ]
+    ];
+    
+    var blockL = [
+      [
+        [0, 0, "+"],
+        ["+", "+", "+"],
+        [0, 0, 0]
+      ],
+      [
+        [0, "+", 0],
+        [0, "+", 0],
+        [0, "+", "+"]
+      ],
+      [
+        [0, 0, 0],
+        ["+", "+", "+"],
+        ["+", 0, 0]
+      ],
+      [
+        ["+", "+", 0],
+        [0, "+", 0],
+        [0, "+", 0]
+
+      ]
+    ];
+    
+    var possibles = [blockI, blockO, blockT, blockS, blockZ, blockJ, blockL];
+    var scoring = ["these are the scoring values:", 40, 100, 300, 1200];
+    var accelerate = 0.995;
+    var keydelay = 100;
+    var positiondelay = 100;
+    var softdropdelay = 50;
+    var lockdelay = 500;
+    
+    window.onload = function() {
+      console.log("> scripts loaded");
+      
+      gameboard = document.getElementById("gameboard");
+      scoreboard = document.getElementById("score");
+      
+      printempty();
+      console.log("> empty board printed");
+      loadgame();
+    }
+    
+    function loadgame() {
+      gameboard = cloneArray(template);
+      
+      score = 0;
+      speed = 1000;
+      pts = 0;
+      canTurn = true;
+      
+      timeout = null;
+      paint();
+      console.log("> board painted");
+      console.log("> game loaded");
+      spawnactive();
+      keypressact();
+      update();
+    }
+    
+    function printempty() {
+      template.forEach(function(item, index) {
+        for (var i = 0; i < item.length; i++) {
+          printpixel("black", i, index);
+        }
+        
+        gameboard.innerHTML += "<br>";
+      });
+    }
+    
+    function paint() {
+      gameboard.forEach(function(item, index) {
+        for (var i = 0; i < item.length; i++) {
+          var pix = item[i];
+          if (pix == "|") {
+            pixel(i, index, "black");
+          }
+          
+          else if (pix == 0) {
+            pixel(i, index, "white", "0");
+          }
+        }
+      });
+    }
+    
+    function printpixel(color, x, y) {
+      gameboard.innerHTML += '<div class="pixel" style="background: ' + color + ';" id="' + x + "," + y + '"></div>';
+    }
+    
+    function update() {
+      if (!keypress["ArrowDown"]) {
+        activedown();
+      }
+      
+      timeout = setTimeout(update, speed);
+      checkfocus();
+    }
+    
+    function updateboard() {
+      paint();
+      ghosttile();
+      printactive();
+    }
+    
+    function activedown(points) {
+      var currentfalling = activetype[activerotate];
+      if (checkcanfall(0, 1)) {
+        activey++;
+        if (points) {
+          addscore(points);
+        }
+      }
+      
+      else {
+        if (!locktimeout) {
+          locktimeout = setTimeout(activereset, lockdelay);
+        }
+      }
+      
+      updateboard();
+    }
+    
+    function activereset() {
+      var currentfalling = activetype[activerotate];
+      currentfalling.forEach(function(list, index) {
+        list.forEach(function(item, jndex) {
+          if (item == "+") {
+            pixel(jndex + activex, index + activey, getcolor(), "1", "-");
+          }
+        })
+      });
+      
+      spawnactive();
+      clearrows();
+      locktimeout = null;
+    }
+    
+    function printactive() {
+      var currentfalling = activetype[activerotate];
+      currentfalling.forEach(function(list, index) {
+        list.forEach(function(item, jndex) {
+          if (item == "+") {
+            var x = jndex + activex;
+            var y = index + activey;
+            pixel(x, y, getcolor());
+            document.getElementById(x + "," + y).style.opacity = "1";
+          }
+        })
+      });
+    }
+
+    
+    function ghosttile() {
+      var i = 0;
+      while (checkcanfall(0, ++i)) {}
+      i--;
+      
+      var currentfalling = activetype[activerotate];
+      currentfalling.forEach(function(list, index) {
+        list.forEach(function(item, jndex) {
+          if (item == "+") {
+            var ghostx = jndex + activex;
+            var ghosty = index + activey + i;
+            pixel(ghostx, ghosty, getcolor());
+            var ghostpixel = document.getElementById(ghostx + "," + ghosty);
+            ghostpixel.style.opacity = "0.4";
+          }
+        })
+      });
+    }
+
+    function getcolor() {
+      if (activetype == blockI) {
+        return "cyan";
+      }
+      
+      else if (activetype == blockO) {
+        return "yellow";
+      }
+      
+      else if (activetype == blockT) {
+        return "purple";
+      }
+      
+      else if (activetype == blockS) {
+        return "green";
+      }
+      
+      else if (activetype == blockZ) {
+        return "red";
+      }
+      
+      else if (activetype == blockJ) {
+        return "blue";
+      }
+      
+      else if (activetype == blockL) {
+        return "orange";
+      }
+    }
+    
+    function checkcanfall(x, y) {
+      var canfall = true;
+      var currentfalling = activetype[activerotate];
+      currentfalling.forEach(function(list, index) {
+        list.forEach(function(item, jndex) {
+          if (item == "+") {
+            var existingpixel = pixel(jndex + activex + x, index + activey + y);
+            if (existingpixel !== 0) {
+              canfall = false;
+            }
+          }
+        })
+      });
+      
+      return canfall;
+    }
+    
+    function checkcanrotate() {
+      var canfall = true;
+      var currentfalling = activetype[activerotate];
+      
+      var ondex = activerotate + 1;
+      if (ondex === activetype.length) {
+        ondex = 0;
+      }
+      
+      var rotatefalling = activetype[ondex];
+      rotatefalling.forEach(function(list, index) {
+        list.forEach(function(item, jndex) {
+          if (item == "+") {
+            var existingpixel = pixel(jndex + activex, index + activey);
+            if (existingpixel !== 0) {
+              canfall = false;
+            }
+          }
+        })
+      });
+      
+      return canfall;
+
+    }
+    
+    function spawnactive() {
+      activetype = possibles[Math.floor(Math.random() * possibles.length)];
+      activerotate = 0;
+      activex = 6 - Math.floor(activetype[0].length / 2);
+      activey = 1;
+    }
+    
+    function clearrows() {
+      var rowscleared = 0;
+      gameboard.forEach(function(item, index) {
+        if (index === 0 || index === 21) {}
+        else if (!item.includes(0)) {
+          item.forEach(function(item, i) {
+            if (item === "|") {}
+            else {
+              pixel(i, index, "white", "0", 0);
+            }
+          })
+          
+          index++;
+          
+          while (--index) {
+            if (index < 2) {
+              break;
+            }
+            //gameboard[index] = gameboard[index - 1];
+            gameboard[index].forEach(function(item, i) {
+              pixel(i, index, colorof(i, index - 1), "1", pixel(i, index - 1))
+            });
+          }
+          
+          rowscleared++;
+        }
+      });
+      
+      if (rowscleared)
+        addscore(scoring[rowscleared]);
+    }
+    
+    function keypressact() {
+      var pressed = false;
+      
+      if (keypress["Escape"]) {
+        pause();
+        //console.log("game paused");
+        //alert("Game Paused\nENTER or SPACE to continue.");
+        //console.log("game unpaused");
+      }
+      
+      if (!timeout) return;
+      
+      if (keypress["ArrowUp"]) {
+        if (checkcanrotate()) {
+          activerotate++;
+          if (activerotate === activetype.length) {
+            activerotate = 0;
+          }
+        }
+        
+        pressed = true;
+      }
+      
+      if (keypress[" "]) {
+        harddrop();
+        pressed = true;
+      }
+      
+      if (!pressed) {
+        // if nothing was pressed this frame
+        keypresstimeout = null;
+        return;
+      }
+      
+      keypresstimeout = setTimeout(keypressact, keydelay);
+      updateboard();
+    }
+    
+    function positionkey() {
+      var pressed = false;
+      if (keypress["ArrowLeft"]) {
+        if (checkcanfall(-1, 0)) {
+          activex--;
+        }
+        
+        pressed = true;
+      }
+      
+      if (keypress["ArrowRight"]) {
+        if (checkcanfall(1, 0)) {
+          activex++;
+        }
+        
+        pressed = true;
+      }
+      
+      if (!pressed) {
+        positiontimeout = null;
+        return;
+      }
+      
+      positiontimeout = setTimeout(positionkey, positiondelay);
+      updateboard();
+    }
+    
+    function softdropkey() {
+      var pressed = false;
+      if (keypress["ArrowDown"]) {
+        softdrop();
+        pressed = true;
+      }
+      
+      if (!pressed) {
+        softdroptimeout = null;
+        return;
+      }
+      
+      softdroptimeout = setTimeout(softdropkey, softdropdelay);
+      updateboard();
+    }
+    
+    function logkeydown(e) {
+      keypress[e.key] = true;
+      if (!keypresstimeout) {
+        keypressact();
+      }
+      
+      if (!positiontimeout) {
+        positionkey();
+      }
+      
+      if (!softdroptimeout) {
+        softdropkey();
+      }
+    }
+    
+    function logkeyup(e) {
+      keypress[e.key] = false;
+    }
+    
+    function softdrop() {
+      activedown(1);
+    }
+    
+    function harddrop() {
+      while (checkcanfall(0, 1)) {
+        activedown(2);
+      }
+      
+      activedown();
+    }
+    
+    function pause(alwayspause) {
+      if (timeout || alwayspause) {
+        clearTimeout(timeout);
+        timeout = null;
+        document.body.style.backgroundColor = "#aaaaaa";
+        document.title += " - game paused";
+        console.log("game paused");
+      }
+      
+      else {
+        timeout = setTimeout(update, speed);
+        document.body.style.backgroundColor = "white";
+        document.title = document.title.replace(" - game paused", "");
+        console.log("game resumed");
+      }
+    }
+    
+    function checkfocus() {
+      if (!document.hasFocus()) {
+        pause(true);
+      }
+    }
+    
+    function pixel(x, y, color, opacity, character) {
+      //console.log(x + " " + y);
+      var pixel = document.getElementById(x + "," + y);
+      if (typeof color !== "undefined") {
+        pixel.style.backgroundColor = color;
+      }
+      
+      if (typeof opacity !== "undefined") {
+        pixel.style.opacity = opacity;
+      }
+      
+      if (typeof character !== "undefined") {
+        gameboard[y][x] = character;
+      }
+      
+      else {
+        return gameboard[y][x];
+      }
+    }
+    
+    function colorof(x, y) {
+      var pixel = document.getElementById(x + "," + y);
+      return pixel.style.backgroundColor;
+    }
+    
+    function cloneArray(array) {
+      var i = array.length;
+      var copy = new Array(i);
+      
+      for (var i = 0; i < template.length; i++) {
+        copy[i] = array[i].slice();
+      }
+      
+      return copy;
+    }
+    
+    function addscore(increase) {
+      score += increase;
+      scoreboard.innerHTML = score;
+    }
+    
+    String.prototype.replaceAt = function(index, replacement) {
+      return this.substr(0, index) + replacement + this.substr(index + replacement.length);
+    }
+    </script>
+  </head>
+  <body onkeydown="logkeydown(event)" onkeyup="logkeyup(event)">
+    <aside>
+      <div id="score">
+        0
+      </div>
+    </aside>
+    <div id="gameboard">
+      
+    </div>
+  </body>
+</html>
