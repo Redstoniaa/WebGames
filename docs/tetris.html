@@ -481,16 +481,16 @@
       
       if (!timeout) return;
       
-      if (keypress["ArrowUp"]) {
-        if (checkcanrotate()) {
-          activerotate++;
-          if (activerotate === activetype.length) {
-            activerotate = 0;
-          }
-        }
+      // if (keypress["ArrowUp"]) {
+      //   if (checkcanrotate()) {
+      //     activerotate++;
+      //     if (activerotate === activetype.length) {
+      //       activerotate = 0;
+      //     }
+      //   }
         
-        pressed = true;
-      }
+      //   pressed = true;
+      // }
       
       if (keypress[" "]) {
         harddrop();
@@ -549,9 +549,29 @@
       softdroptimeout = setTimeout(softdropkey, softdropdelay);
       updateboard();
     }
+
+    function onRotateKeypress() {
+      if (checkcanrotate()) {
+        activerotate++;
+        if (activerotate === activetype.length) {
+          activerotate = 0;
+        }
+      }
+    }
     
     function logkeydown(e) {
+      if (e.key == "ArrowUp" && !keypress["ArrowUp"]) {
+        /*
+        only rotate if:
+          a) the key is actually the correct key and
+          b) the key was previously up
+        in effect, this only activates once per keypress, and not repeatedly like other key actions
+        */
+        onRotateKeypress();
+      }
+      
       keypress[e.key] = true;
+      
       if (!keypresstimeout) {
         keypressact();
       }
